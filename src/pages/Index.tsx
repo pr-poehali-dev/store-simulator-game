@@ -66,18 +66,18 @@ const VEGETABLES: Product[] = [
 ];
 
 const FRUITS: Product[] = [
-  { id: 'f1', name: 'Яблоки', category: 'fruits', buyPrice: 60, sellPrice: 90, stock: 30, image: '🍎', description: 'Сочные красные яблоки', unlocked: true },
-  { id: 'f2', name: 'Бананы', category: 'fruits', buyPrice: 80, sellPrice: 120, stock: 25, image: '🍌', description: 'Спелые желтые бананы', unlocked: true },
-  { id: 'f3', name: 'Апельсины', category: 'fruits', buyPrice: 70, sellPrice: 105, stock: 20, image: '🍊', description: 'Сладкие апельсины', unlocked: true },
-  { id: 'f4', name: 'Груши', category: 'fruits', buyPrice: 65, sellPrice: 95, stock: 18, image: '🍐', description: 'Сочные груши', unlocked: true },
-  { id: 'f5', name: 'Виноград', category: 'fruits', buyPrice: 120, sellPrice: 180, stock: 15, image: '🍇', description: 'Кисло-сладкий виноград', unlocked: true },
-  { id: 'f6', name: 'Киви', category: 'fruits', buyPrice: 100, sellPrice: 150, stock: 12, image: '🥝', description: 'Экзотические киви', unlocked: true },
-  { id: 'f7', name: 'Манго', category: 'fruits', buyPrice: 200, sellPrice: 280, stock: 8, image: '🥭', description: 'Тропические манго', unlocked: true },
-  { id: 'f8', name: 'Ананасы', category: 'fruits', buyPrice: 250, sellPrice: 350, stock: 6, image: '🍍', description: 'Сладкие ананасы', unlocked: true },
-  { id: 'f9', name: 'Персики', category: 'fruits', buyPrice: 90, sellPrice: 135, stock: 16, image: '🍑', description: 'Нежные персики', unlocked: true },
+  { id: 'f1', name: 'Яблоки', category: 'fruits', buyPrice: 60, sellPrice: 90, stock: 10, image: '🍎', description: 'Сочные красные яблоки', unlocked: true },
+  { id: 'f2', name: 'Бананы', category: 'fruits', buyPrice: 80, sellPrice: 120, stock: 10, image: '🍌', description: 'Спелые желтые бананы', unlocked: true },
+  { id: 'f3', name: 'Апельсины', category: 'fruits', buyPrice: 70, sellPrice: 105, stock: 10, image: '🍊', description: 'Сладкие апельсины', unlocked: true },
+  { id: 'f4', name: 'Груши', category: 'fruits', buyPrice: 65, sellPrice: 95, stock: 10, image: '🍐', description: 'Сочные груши', unlocked: true },
+  { id: 'f5', name: 'Виноград', category: 'fruits', buyPrice: 120, sellPrice: 180, stock: 10, image: '🍇', description: 'Кисло-сладкий виноград', unlocked: true },
+  { id: 'f6', name: 'Киви', category: 'fruits', buyPrice: 100, sellPrice: 150, stock: 10, image: '🥝', description: 'Экзотические киви', unlocked: true },
+  { id: 'f7', name: 'Манго', category: 'fruits', buyPrice: 200, sellPrice: 280, stock: 10, image: '🥭', description: 'Тропические манго', unlocked: true },
+  { id: 'f8', name: 'Ананасы', category: 'fruits', buyPrice: 250, sellPrice: 350, stock: 10, image: '🍍', description: 'Сладкие ананасы', unlocked: true },
+  { id: 'f9', name: 'Персики', category: 'fruits', buyPrice: 90, sellPrice: 135, stock: 10, image: '🍑', description: 'Нежные персики', unlocked: true },
   { id: 'f10', name: 'Клубника', category: 'fruits', buyPrice: 150, sellPrice: 220, stock: 10, image: '🍓', description: 'Сладкая клубника', unlocked: true },
-  { id: 'f11', name: 'Арбуз', category: 'fruits', buyPrice: 80, sellPrice: 120, stock: 8, image: '🍉', description: 'Сочный арбуз', unlocked: true },
-  { id: 'f12', name: 'Лимоны', category: 'fruits', buyPrice: 55, sellPrice: 85, stock: 20, image: '🍋', description: 'Кислые лимоны', unlocked: true },
+  { id: 'f11', name: 'Арбуз', category: 'fruits', buyPrice: 80, sellPrice: 120, stock: 10, image: '🍉', description: 'Сочный арбуз', unlocked: true },
+  { id: 'f12', name: 'Лимоны', category: 'fruits', buyPrice: 55, sellPrice: 85, stock: 10, image: '🍋', description: 'Кислые лимоны', unlocked: true },
 ];
 
 const ELECTRONICS: Product[] = [
@@ -316,6 +316,52 @@ export default function Index() {
     }));
   };
 
+  const sellAllByCategory = (category: 'vegetables' | 'fruits' | 'electronics' | 'cars') => {
+    const categoryProducts = availableProducts.filter(p => p.category === category && p.stock > 0);
+    if (categoryProducts.length === 0) {
+      showNotification('Нет товаров для продажи в этой категории!');
+      return;
+    }
+
+    let totalProfit = 0;
+    let totalSales = 0;
+    let totalRevenue = 0;
+    let totalHimCoins = 0;
+
+    setProducts(prev => prev.map(product => {
+      if (product.category === category && product.stock > 0) {
+        const sellSpeed = gameStats.hasVipSubscription ? 2 : 1;
+        const actualSold = Math.min(product.stock, sellSpeed);
+        const profit = (product.sellPrice - product.buyPrice) * actualSold;
+        
+        totalProfit += profit;
+        totalSales += actualSold;
+        totalRevenue += product.sellPrice * actualSold;
+        totalHimCoins += actualSold;
+        
+        return { ...product, stock: Math.max(0, product.stock - sellSpeed) };
+      }
+      return product;
+    }));
+
+    setGameStats(stats => ({
+      ...stats,
+      totalSales: stats.totalSales + totalSales,
+      totalRevenue: stats.totalRevenue + totalRevenue,
+      money: stats.money + totalProfit,
+      himCoins: stats.himCoins + totalHimCoins,
+    }));
+
+    const categoryName = {
+      vegetables: 'овощей',
+      fruits: 'фруктов', 
+      electronics: 'техники',
+      cars: 'автомобилей'
+    }[category];
+
+    showNotification(`Продано всех ${categoryName}: ${totalSales} шт (+${totalProfit.toLocaleString()}₽, +${totalHimCoins} HimCoins)`);
+  };
+
   const restockProduct = (productId: string, quantity: number = 10) => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -519,10 +565,20 @@ export default function Index() {
             <div className="space-y-8">
               {/* Овощи */}
               <div className="space-y-4">
-                <h2 className="text-3xl font-bold flex items-center gap-3">
-                  <Icon name="Carrot" size={32} className="text-orange-500" />
-                  Овощи
-                </h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-3xl font-bold flex items-center gap-3">
+                    <Icon name="Carrot" size={32} className="text-orange-500" />
+                    Овощи
+                  </h2>
+                  <Button 
+                    onClick={() => sellAllByCategory('vegetables')}
+                    disabled={vegetables.filter(p => p.stock > 0).length === 0}
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                  >
+                    <Icon name="ShoppingCart" size={16} className="mr-2" />
+                    Продать все {gameStats.hasVipSubscription ? 'x2' : ''}
+                  </Button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {vegetables.map(product => (
                     <Card key={product.id} className="hover:shadow-lg transition-all duration-200 hover:scale-105">
@@ -555,10 +611,20 @@ export default function Index() {
 
               {/* Фрукты */}
               <div className="space-y-4">
-                <h2 className="text-3xl font-bold flex items-center gap-3">
-                  <Icon name="Apple" size={32} className="text-red-500" />
-                  Фрукты
-                </h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-3xl font-bold flex items-center gap-3">
+                    <Icon name="Apple" size={32} className="text-red-500" />
+                    Фрукты
+                  </h2>
+                  <Button 
+                    onClick={() => sellAllByCategory('fruits')}
+                    disabled={fruits.filter(p => p.stock > 0).length === 0}
+                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+                  >
+                    <Icon name="ShoppingCart" size={16} className="mr-2" />
+                    Продать все {gameStats.hasVipSubscription ? 'x2' : ''}
+                  </Button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {fruits.map(product => (
                     <Card key={product.id} className="hover:shadow-lg transition-all duration-200 hover:scale-105 border-red-200">
@@ -592,10 +658,20 @@ export default function Index() {
               {/* Техника */}
               {gameStats.currentLevel >= 2 && (
                 <div className="space-y-4">
-                  <h2 className="text-3xl font-bold flex items-center gap-3">
-                    <Icon name="Smartphone" size={32} className="text-blue-500" />
-                    Техника
-                  </h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-3xl font-bold flex items-center gap-3">
+                      <Icon name="Smartphone" size={32} className="text-blue-500" />
+                      Техника
+                    </h2>
+                    <Button 
+                      onClick={() => sellAllByCategory('electronics')}
+                      disabled={electronics.filter(p => p.stock > 0).length === 0}
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                    >
+                      <Icon name="ShoppingCart" size={16} className="mr-2" />
+                      Продать все {gameStats.hasVipSubscription ? 'x2' : ''}
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {electronics.slice(0, 20).map(product => (
                       <Card key={product.id} className="hover:shadow-lg transition-all duration-200 hover:scale-105 border-blue-200">
@@ -866,12 +942,20 @@ export default function Index() {
           {/* Автосервис */}
           {selectedBlock === 'autoservice' && gameStats.currentLevel >= 3 && (
             <div className="space-y-6">
-              <div className="text-center">
+              <div className="text-center space-y-4">
                 <h2 className="text-3xl font-bold text-red-600 flex items-center justify-center gap-3">
                   <Icon name="Car" size={32} />
                   Автосервис
                 </h2>
                 <p className="text-slate-600">Ремонтируйте автомобили и продавайте их с прибылью</p>
+                <Button 
+                  onClick={() => sellAllByCategory('cars')}
+                  disabled={cars.filter(c => c.stock > 0).length === 0}
+                  className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                >
+                  <Icon name="ShoppingCart" size={16} className="mr-2" />
+                  Продать все авто {gameStats.hasVipSubscription ? 'x2' : ''}
+                </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {cars.map(car => (
